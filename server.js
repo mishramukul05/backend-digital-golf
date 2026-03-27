@@ -33,7 +33,13 @@ const connectDB = async () => {
     console.error('❌ MongoDB Connection Error: ', err);
   }
 };
-connectDB();
+
+// Ensure database is connected before handling any requests
+// This fixes the buffering timeout in Vercel's serverless environment
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 // Routes
 app.use('/api/scores', require('./routes/scores'));
