@@ -20,9 +20,20 @@ app.use('/api/payment/webhook', express.raw({ type: 'application/json' }), requi
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-  .then(() => console.log('✅ MongoDB Connected successfully'))
-  .catch(err => console.log('❌ MongoDB Connection Error: ', err));
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+  try {
+    await mongoose.connect(process.env.MONGO_URI, { 
+      serverSelectionTimeoutMS: 5000 
+    });
+    console.log('✅ MongoDB Connected successfully');
+  } catch (err) {
+    console.error('❌ MongoDB Connection Error: ', err);
+  }
+};
+connectDB();
 
 // Routes
 app.use('/api/scores', require('./routes/scores'));
@@ -38,4 +49,8 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;
